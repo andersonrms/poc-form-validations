@@ -7,6 +7,9 @@ import { z } from 'zod'
 import { cpfMask } from './helpers/getCpfMaks'
 
 const createUserFormSchema = z.object({
+  avatar: z.instanceof(FileList)
+    .transform(list => list.item(0)!)
+    .refine(file => file.size <= 5 * 1024 * 1024, 'O Arquivo precisa ter no máximo 5mb'),
   name: z.string().nonempty('O nome é obrigatório').transform(name => {
     return name.trim().split(' ').map(word => {
       return word[0].toLocaleUpperCase().concat(word.substring(1))
@@ -37,6 +40,7 @@ function App() {
   const [output, setOutput] = useState('')
 
   const createUser = (data: CreateUserFormData) => {
+    console.log(data.avatar)
     setOutput(JSON.stringify(data, null, 2))
   }
 
@@ -55,6 +59,14 @@ function App() {
   return (
     <main className='h-screen bg-zinc-950 text-zinc-300 flex flex-col gap-10 items-center justify-center'>
       <form className='flex flex-col gap-4 w-full max-w-xs' onSubmit={handleSubmit(createUser)}>
+      <div className='flex flex-col gap-1'>
+          <label htmlFor="name">Avatar</label>
+          <input 
+            type="file" 
+            {...register('avatar')}
+          />
+          {errors.avatar && <span className='text-red-500 text-sm'>{errors.avatar.message}</span>}
+        </div>
         <div className='flex flex-col gap-1'>
           <label htmlFor="name">Nome</label>
           <input 
@@ -143,7 +155,7 @@ function App() {
           Salvar
         </button>
       </form>
-      <pre>{output}</pre>
+      <div>{output}</div>
     </main>
   )
 }
